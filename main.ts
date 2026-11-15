@@ -91,6 +91,18 @@ function forecast(prices: number[]): number {
 
   // Work in logs: returns add, and a proportional pull is scale-free.
   const n = prices.length;
+
+  // Validate every close we will take a log of: one bad tick (0,
+  // negative, NaN) would otherwise poison the whole forecast to NaN
+  // and emit a non-finite price the scorer rejects. Fail loudly
+  // instead, naming the bad index.
+  for (let i = 0; i < n; i++) {
+    const p = prices[i] as number;
+    if (typeof p !== "number" || !Number.isFinite(p) || p <= 0) {
+      throw new Error(`price at index ${i} is not a finite positive number`);
+    }
+  }
+
   const logLast = Math.log(last);
 
   // Anchor: mean log price over the trailing day (or all history if
